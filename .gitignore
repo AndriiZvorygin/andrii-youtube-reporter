@@ -1,0 +1,10 @@
+configure/secret.pya
+artifacts/
+know/produce/
+session/
+memory/
+
+# Local runtime and authentication state
+conduct/
+cron.log
+__tmp_*

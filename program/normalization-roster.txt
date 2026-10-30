@@ -1,0 +1,15 @@
+Andrii Youtube Transcript Roster
+Reference roster for livestream transcript normalization
+Place context: andrii.zvorygin.ca podcast and livestream channels
+
+- Andrii Zvorygin | role: Host | gender: unknown
+- Bill Blackham | role: Guest | gender: unknown
+- Q'uo | role: Channeled source | gender: n/a
+- Latwii | role: Channeled source | gender: n/a
+- Laitos | role: Channeled source | gender: n/a
+- Fred | role: Guest | gender: unknown
+- Gregory | role: Guest | gender: unknown
+
+Notes:
+- This roster is intended as LLM reference context for transcript normalization and summarization.
+- Update this file as recurring speakers appear.

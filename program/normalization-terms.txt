@@ -1,0 +1,14 @@
+# Format:
+# canonical<TAB>alias1|alias2|alias3
+# or:
+# canonical => alias1|alias2
+
+Andrii Zvorygin	Andrei Zvorygin|Andriy Zvorygin|Andrii Zorygin|Andriy Zorygin|Andrey Zvorygin
+Bill Blackham	Bill Blackman|Bill Blackam|Bil Blackham
+Q'uo	Quo|Q U O|Quo|Q'uo
+Latwii	Latwii|Latwee|Lattwii
+Laitos	Latos|Laetos|Laytos
+Gregory	Gregori|Gregorii|Gregoryy
+Jodi King	Jody King
+Ray Botten	Ray Boughton
+Owen Sound	Oceanside|Onondaga|Long Sound|Olmsted|Owen's Sound|Owensound
