@@ -272,9 +272,25 @@ function personalAttackTerms(text = "") {
   });
 }
 
+export function isSparseChapterUnit(unit) {
+  const source = String(unit?.sourceExcerpt || unit?.chapterText || "")
+    .replace(/\bSPEAKER_\d+\s*:\s*/giu, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+  const words = source ? source.split(/\s+/u).filter(Boolean) : [];
+  const sourceRows = Number(unit?.sourceRows);
+  return (Number.isFinite(sourceRows) && sourceRows <= 3) || words.length <= 8;
+}
+
 async function adjudicateTopicOnlyTitle({ unit, title, meetingContext, focus, candidateEvidence = "" }) {
   const source = String(unit?.sourceExcerpt || unit?.chapterText || "").trim();
   let draft = String(title || "").replace(/\s+/gu, " ").trim();
+  // A chapter with only a marker or a few words is a procedural/audio-gap
+  // window, not a substantive topic. Preserve its existing neutral marker so
+  // an empty LLM response cannot block the entire meeting publication.
+  if (isSparseChapterUnit(unit) && draft) {
+    return { title: draft, issues: ["sparse procedural chapter"] };
+  }
   let lastIssue = "";
   for (let attempt = 1; attempt <= 4; attempt += 1) {
     const response = await askOllama({
@@ -650,7 +666,10 @@ async function main() {
   process.stdout.write(`[chapter-summary] verification: ${verifyPath}\n`);
 }
 
-main().catch((err) => {
-  process.stderr.write(`${String(err?.stack || err?.message || err)}\n`);
-  process.exit(1);
-});
+const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : "";
+if (import.meta.url === `file://${invokedPath}`) {
+  main().catch((err) => {
+    process.stderr.write(`${String(err?.stack || err?.message || err)}\n`);
+    process.exit(1);
+  });
+}

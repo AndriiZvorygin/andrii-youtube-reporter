@@ -11,6 +11,7 @@ import {
   normalizeChapterTextFile,
   parseChapterTimestamp,
 } from "../program/chapter-timestamps.mjs";
+import { isSparseChapterUnit } from "../program/summarize-chapter-grounding-from-transcript-folder.mjs";
 
 test("YouTube chapter timestamps parse both minute and hour forms", () => {
   assert.equal(parseChapterTimestamp("00:00"), 0);
@@ -40,4 +41,12 @@ test("chapter checkpoint migration rewrites only when needed", () => {
   assert.equal(normalizeChapterTextFile(file), true);
   assert.equal(fs.readFileSync(file, "utf8"), "00:00 Intro\n00:01:00 Topic\n");
   assert.equal(normalizeChapterTextFile(file), false);
+});
+
+test("sparse procedural chapter windows do not require topic adjudication", () => {
+  assert.equal(isSparseChapterUnit({ sourceRows: 1, sourceExcerpt: "SPEAKER_062: No." }), true);
+  assert.equal(isSparseChapterUnit({
+    sourceRows: 16,
+    sourceExcerpt: "SPEAKER_062: The board reviewed quarterly collision reports and discussed next steps.",
+  }), false);
 });
