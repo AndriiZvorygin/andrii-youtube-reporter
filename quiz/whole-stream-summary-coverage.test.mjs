@@ -5,6 +5,7 @@ import { DEFAULT_TEXT_MODEL } from "../../../../program/runtime/gpu/text-model.m
 
 import {
   parseSummaryCoverageChunks,
+  summaryCoverageRequirements,
   verifyStreamSummaryLlm,
 } from "../program/run-andrii-youtube-meeting-from-ref.mjs";
 
@@ -117,4 +118,60 @@ test("Andrii whole-stream verifier retries a repair that omits a late chronology
   assert.equal(auditCalls, 4);
   assert.match(prompts[3], /chronology coverage audit/u);
   assert.match(prompts[3], /meeting_chunk_002/u);
+});
+
+test("two-band summaries accept four non-duplicated sentences after coverage audit", async (t) => {
+  const coverageText = [
+    pyaCoverageLine("meeting_chunk_001", ["Budget review"], "The board reviewed its budget.", 0, 0),
+    pyaCoverageLine("meeting_chunk_002", ["Staffing report"], "The board reviewed staffing changes.", 1, 1),
+  ].join("\n");
+  assert.equal(summaryCoverageRequirements(coverageText).minSentences, 4);
+  const candidate = [
+    "## Whole Stream Summary",
+    "The board reviewed its budget. Members discussed staffing changes. They considered next steps for service delivery. The meeting closed after the reports.",
+    "",
+    "## Most Newsworthy Items",
+    "* Budget review was discussed.",
+    "* Staffing changes were reviewed.",
+    "* Service delivery next steps were considered.",
+    "* The meeting concluded after the reports.",
+  ].join("\n");
+  const originalFetch = globalThis.fetch;
+  let auditCalls = 0;
+  globalThis.fetch = async (_url, options) => {
+    const body = JSON.parse(String(options?.body || "{}"));
+    assert.equal(body.model, DEFAULT_TEXT_MODEL);
+    const prompt = String(body?.messages?.[1]?.content || "");
+    if (prompt.includes("Validate and correct this livestream summary against the transcript source.")) {
+      return {
+        ok: true,
+        async json() {
+          return { message: { content: JSON.stringify({ pass: true, corrected_markdown: candidate, issues: [] }) } };
+        },
+      };
+    }
+    if (!prompt.includes("Check whether the WHOLE STREAM SUMMARY paragraph covers this chronology chunk.")) {
+      throw new Error(`unexpected qwen prompt: ${prompt.slice(0, 120)}`);
+    }
+    auditCalls += 1;
+    return {
+      ok: true,
+      async json() {
+        return { message: { content: JSON.stringify({ covered: true, evidence: "topic appears", missing_topics: [] }) } };
+      },
+    };
+  };
+  t.after(() => { globalThis.fetch = originalFetch; });
+
+  const result = await verifyStreamSummaryLlm({
+    candidate,
+    sourceText: "The board reviewed its budget and staffing changes before discussing service delivery.",
+    coverageText,
+    focus: "neutral source-faithful coverage",
+    context: "Police Services Board meeting",
+  });
+
+  assert.equal(result.pass, true);
+  assert.equal(result.attempts, 1);
+  assert.equal(auditCalls, 2);
 });

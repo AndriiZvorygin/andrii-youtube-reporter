@@ -1195,8 +1195,12 @@ function parseSummaryCoverageChunks(coverageText) {
 
 function summaryCoverageRequirements(coverageText) {
   const bands = parseSummaryCoverageChunks(coverageText).length;
+  // Sentence count is a coverage aid, not a prose quota. Four distinct
+  // sentences are sufficient for a two-band recording when the chronology
+  // audit confirms both bands are represented; requiring five caused valid
+  // compact summaries to retry forever without adding information.
   if (bands >= 3) return { bands, minSentences: 8, bulletCount: 6 };
-  if (bands === 2) return { bands, minSentences: 5, bulletCount: 4 };
+  if (bands === 2) return { bands, minSentences: 4, bulletCount: 4 };
   return { bands, minSentences: 4, bulletCount: 3 };
 }
 
@@ -2215,7 +2219,13 @@ function titleCase(text) {
   return String(text || "").split(/\s+/u).filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
 }
 
-export { auditStreamSummaryCoverage, parseSummaryCoverageChunks, verificationSourceCoverage, verifyStreamSummaryLlm };
+export {
+  auditStreamSummaryCoverage,
+  parseSummaryCoverageChunks,
+  summaryCoverageRequirements,
+  verificationSourceCoverage,
+  verifyStreamSummaryLlm,
+};
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   main().catch((err) => {
